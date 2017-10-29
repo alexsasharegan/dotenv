@@ -28,8 +28,8 @@ var ErrCommentln = errors.New("comment line")
 
 var varRE = regexp.MustCompile(`\${\w+}`)
 
-// ReadFile reads an env file at a given path, and return values as a map.
-func ReadFile(path string) (map[string]string, error) {
+// readFile reads an env file at a given path, and return values as a map.
+func readFile(path string) (map[string]string, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
@@ -196,7 +196,7 @@ func Overload(paths ...string) (err error) {
 // LoadFile parses the environment config at the given path
 // and loads it into the os environment.
 func LoadFile(path string, overload bool) error {
-	env, err := ReadFile(path)
+	env, err := readFile(path)
 	if err != nil {
 		return err
 	}

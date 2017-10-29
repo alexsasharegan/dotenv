@@ -79,7 +79,7 @@ func TestReadPlainEnv(t *testing.T) {
 		"OPTION_G": "",
 	}
 
-	envMap, err := ReadFile(envFileName)
+	envMap, err := readFile(envFileName)
 	if err != nil {
 		t.Error("Error reading file")
 	}
@@ -317,7 +317,7 @@ func TestLinesToIgnore(t *testing.T) {
 
 func TestErrorReadDirectory(t *testing.T) {
 	envFileName := "fixtures/"
-	envMap, err := ReadFile(envFileName)
+	envMap, err := readFile(envFileName)
 
 	if err == nil {
 		t.Errorf("Expected error, got %v", envMap)
@@ -326,7 +326,7 @@ func TestErrorReadDirectory(t *testing.T) {
 
 func TestErrorParsing(t *testing.T) {
 	envFileName := "fixtures/invalid1.env"
-	envMap, err := ReadFile(envFileName)
+	envMap, err := readFile(envFileName)
 	if err == nil {
 		t.Errorf("Expected error, got %v", envMap)
 	}
