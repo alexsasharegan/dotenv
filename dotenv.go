@@ -11,8 +11,14 @@ import (
 	"strings"
 )
 
-var errEmptyln = errors.New("empty line")
-var errCommentln = errors.New("comment line")
+// ErrInvalidln indicates an invalid line
+var ErrInvalidln = errors.New("invalid line")
+
+// ErrEmptyln indicates an empty line
+var ErrEmptyln = errors.New("empty line")
+
+// ErrCommentln indicates a comment line
+var ErrCommentln = errors.New("comment line")
 
 var varRE = regexp.MustCompile("\\${\\w+}")
 
@@ -61,17 +67,22 @@ func Read(rd io.Reader) (map[string]string, error) {
 func parseln(ln string) (key, value string, err error) {
 	ln = strings.TrimSpace(ln)
 	if strings.HasPrefix(ln, "#") {
-		err = errEmptyln
+		err = ErrEmptyln
 		return
 	}
 	if ln == "" {
-		err = errCommentln
+		err = ErrCommentln
 		return
 	}
+	if !strings.Contains(ln, "=") {
+		err = ErrInvalidln
+		return
+	}
+
 	var (
-		buf          bytes.Buffer
-		quoteType    rune
-		insideQuotes bool
+		buf                   bytes.Buffer
+		quoteType             rune
+		eqFound, insideQuotes bool
 	)
 
 	for _, r := range ln {
@@ -93,11 +104,15 @@ func parseln(ln string) (key, value string, err error) {
 			if r == '=' {
 				key = buf.String()
 				buf.Reset()
+				eqFound = true
 				continue
 			}
 		}
-
 		buf.WriteRune(r)
+	}
+	if !eqFound {
+		err = ErrInvalidln
+		return
 	}
 	value = buf.String()
 	return
