@@ -59,6 +59,9 @@ func Read(rd io.Reader) (map[string]string, error) {
 		if err == ErrInvalidln {
 			return nil, fmt.Errorf("could not parse file: %v", err)
 		}
+		if err != nil {
+			continue
+		}
 		envMap[k] = v
 	}
 

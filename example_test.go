@@ -16,8 +16,12 @@ func ExampleLoad() {
 
 	envKeys := []string{"S3_BUCKET", "SECRET_KEY", "MESSAGE"}
 	for _, key := range envKeys {
-		fmt.Printf("%s : %s", key, os.Getenv(key))
+		fmt.Printf("%s : %s\n", key, os.Getenv(key))
 	}
+	// Output:
+	// S3_BUCKET : YOURS3BUCKET
+	// SECRET_KEY : YOURSECRETKEYGOESHERE
+	// MESSAGE : A message containing important spaces.
 }
 
 func ExampleReadFile() {
@@ -26,16 +30,16 @@ func ExampleReadFile() {
 		log.Fatal(err)
 	}
 
-	for key, val := range env {
-		fmt.Printf("%s : %s", key, val)
-	}
+	fmt.Printf("%s : %s\n", "LIB", env["LIB"])
+	// Output:
+	// LIB : github.com/alexsasharegan/dotenv
 }
 
 func ExampleParseString() {
 	envStrs := []string{
 		`FOO=bar`,
-		`FOO="escaped\"bar"`,
-		`FOO="bar\nbaz`,
+		`FOO="escaped\"bar with quote"`,
+		`FOO="bar\nbaz"`,
 		`FOO.BAR=foobar`,
 		`FOO="bar#baz" # comment`,
 		`INVALID LINE`,
@@ -47,6 +51,14 @@ func ExampleParseString() {
 			fmt.Printf("parsing error: %v", err)
 			continue
 		}
-		fmt.Printf("%s : %s", k, v)
+		fmt.Printf("%s : %s\n", k, v)
 	}
+	// Output:
+	// FOO : bar
+	// FOO : escaped"bar with quote
+	// FOO : bar
+	// baz
+	// FOO.BAR : foobar
+	// FOO : bar#baz
+	// parsing error: invalid line
 }
