@@ -14,7 +14,7 @@ import (
 var errEmptyln = errors.New("empty line")
 var errCommentln = errors.New("comment line")
 
-var varRE = regexp.MustCompile("\\${(\\w+)}")
+var varRE = regexp.MustCompile("\\${\\w+}")
 
 // ReadFile reads an env file at a given path, and return values as a map.
 func ReadFile(path string) (map[string]string, error) {
