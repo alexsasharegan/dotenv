@@ -7,18 +7,14 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"regexp"
 	"strings"
-)
-
-const (
-	squo = '\''
-	dquo = '"'
-	hash = '#'
-	eq   = '='
 )
 
 var errEmptyln = errors.New("empty line")
 var errCommentln = errors.New("comment line")
+
+var varRE = regexp.MustCompile("\\${(\\w+)}")
 
 // ReadFile reads an env file at a given path, and return values as a map.
 func ReadFile(path string) (map[string]string, error) {
@@ -43,7 +39,12 @@ func Read(rd io.Reader) (map[string]string, error) {
 		if err != nil {
 			break
 		}
-		k, v, err = parseln(line, envMap)
+		if varRE.MatchString(line) {
+			line = varRE.ReplaceAllStringFunc(line, func(s string) string {
+				return envMap[strings.Trim(s, "${}")]
+			})
+		}
+		k, v, err = parseln(line)
 		if err != nil {
 			continue
 		}
@@ -67,11 +68,14 @@ func parseln(ln string) (key, value string, err error) {
 		err = errCommentln
 		return
 	}
-	var buf bytes.Buffer
-	var quoteType rune
-	insideQuotes := false
+	var (
+		buf          bytes.Buffer
+		quoteType    rune
+		insideQuotes bool
+	)
+
 	for _, r := range ln {
-		if r == squo || r == dquo {
+		if r == '\'' || r == '"' {
 			if insideQuotes && r == quoteType {
 				insideQuotes = false
 				continue
@@ -83,10 +87,10 @@ func parseln(ln string) (key, value string, err error) {
 			}
 		}
 		if !insideQuotes {
-			if r == hash {
+			if r == '#' {
 				break
 			}
-			if r == eq {
+			if r == '=' {
 				key = buf.String()
 				buf.Reset()
 				continue
