@@ -38,17 +38,14 @@ func readFile(path string) (map[string]string, error) {
 
 // Read parses the given reader's contents and return values as a map.
 func Read(rd io.Reader) (map[string]string, error) {
-	r := bufio.NewReader(rd)
+	scanner := bufio.NewScanner(rd)
 	envMap := make(map[string]string)
 	var (
 		line, k, v string
 		err        error
 	)
-	for {
-		line, err = r.ReadString('\n')
-		if err != nil {
-			break
-		}
+	for scanner.Scan() {
+		line = scanner.Text()
 		if varRE.MatchString(line) {
 			line = varRE.ReplaceAllStringFunc(line, func(s string) string {
 				return envMap[strings.Trim(s, "${}")]
@@ -58,13 +55,10 @@ func Read(rd io.Reader) (map[string]string, error) {
 		if err == ErrInvalidln {
 			return nil, fmt.Errorf("could not parse file: %v", err)
 		}
-		if err != nil {
-			continue
-		}
 		envMap[k] = v
 	}
 
-	if err != io.EOF {
+	if err = scanner.Err(); err != nil {
 		return nil, fmt.Errorf("error reading file: %v", err)
 	}
 
