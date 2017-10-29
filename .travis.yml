@@ -6,3 +6,4 @@ go:
 os:
   - linux
   - osx
+  - freebsd

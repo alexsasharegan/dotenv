@@ -30,8 +30,8 @@ var (
 
 var varRE = regexp.MustCompile(`\${\w+}`)
 
-// readFile reads an env file at a given path, and return values as a map.
-func readFile(path string) (map[string]string, error) {
+// ReadFile reads an env file at a given path, and return values as a map.
+func ReadFile(path string) (map[string]string, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
@@ -71,17 +71,17 @@ func Read(rd io.Reader) (map[string]string, error) {
 
 // ParseString parses a given string into a key, value pair.
 // Returns the key, value, and an error.
-func ParseString(ln string) (key, value string, err error) {
-	ln = strings.TrimSpace(ln)
-	if strings.HasPrefix(ln, "#") {
+func ParseString(s string) (key, value string, err error) {
+	s = strings.TrimSpace(s)
+	if strings.HasPrefix(s, "#") {
 		err = ErrCommentln
 		return
 	}
-	if ln == "" {
+	if s == "" {
 		err = ErrEmptyln
 		return
 	}
-	if !strings.Contains(ln, "=") {
+	if !strings.Contains(s, "=") {
 		err = ErrInvalidln
 		return
 	}
@@ -93,7 +93,7 @@ func ParseString(ln string) (key, value string, err error) {
 		mapPos, escPos int = posKey, -1
 	)
 
-	for i, r := range ln {
+	for i, r := range s {
 		if inQuo {
 			if i == escPos {
 				switch r {
@@ -194,7 +194,7 @@ func Overload(paths ...string) (err error) {
 // loadFile parses the environment config at the given path
 // and loads it into the os environment.
 func loadFile(path string, overload bool) error {
-	env, err := readFile(path)
+	env, err := ReadFile(path)
 	if err != nil {
 		return err
 	}

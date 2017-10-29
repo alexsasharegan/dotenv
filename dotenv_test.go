@@ -1,14 +1,16 @@
-package dotenv
+package dotenv_test
 
 import (
 	"os"
 	"testing"
+
+	"github.com/alexsasharegan/dotenv"
 )
 
 var noopPresets = make(map[string]string)
 
 func parseAndCompare(t *testing.T, rawEnvLine string, expectedKey string, expectedValue string) {
-	key, value, _ := ParseString(rawEnvLine)
+	key, value, _ := dotenv.ParseString(rawEnvLine)
 	if key != expectedKey || value != expectedValue {
 		t.Errorf("Expected '%v' to parse as '%v' => '%v', got '%v' => '%v' instead", rawEnvLine, expectedKey, expectedValue, key, value)
 	}
@@ -38,7 +40,7 @@ func loadEnvAndCompareValues(t *testing.T, loader func(files ...string) error, e
 }
 
 func TestLoadWithNoArgsLoadsDotEnv(t *testing.T) {
-	err := Load()
+	err := dotenv.Load()
 	pathError := err.(*os.PathError)
 	if pathError == nil || pathError.Op != "open" || pathError.Path != ".env" {
 		t.Errorf("Didn't try and open .env by default")
@@ -46,7 +48,7 @@ func TestLoadWithNoArgsLoadsDotEnv(t *testing.T) {
 }
 
 func TestOverloadWithNoArgsOverloadsDotEnv(t *testing.T) {
-	err := Overload()
+	err := dotenv.Overload()
 	pathError := err.(*os.PathError)
 	if pathError == nil || pathError.Op != "open" || pathError.Path != ".env" {
 		t.Errorf("Didn't try and open .env by default")
@@ -54,14 +56,14 @@ func TestOverloadWithNoArgsOverloadsDotEnv(t *testing.T) {
 }
 
 func TestLoadFileNotFound(t *testing.T) {
-	err := Load("somefilethatwillneverexistever.env")
+	err := dotenv.Load("somefilethatwillneverexistever.env")
 	if err == nil {
 		t.Error("File wasn't found but Load didn't return an error")
 	}
 }
 
 func TestOverloadFileNotFound(t *testing.T) {
-	err := Overload("somefilethatwillneverexistever.env")
+	err := dotenv.Overload("somefilethatwillneverexistever.env")
 	if err == nil {
 		t.Error("File wasn't found but Overload didn't return an error")
 	}
@@ -79,7 +81,7 @@ func TestReadPlainEnv(t *testing.T) {
 		"OPTION_G": "",
 	}
 
-	envMap, err := readFile(envFileName)
+	envMap, err := dotenv.ReadFile(envFileName)
 	if err != nil {
 		t.Error("Error reading file")
 	}
@@ -108,7 +110,7 @@ func TestLoadDoesNotOverride(t *testing.T) {
 		"OPTION_A": "do_not_override",
 		"OPTION_B": "",
 	}
-	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, presets)
+	loadEnvAndCompareValues(t, dotenv.Load, envFileName, expectedValues, presets)
 }
 
 func TestOverloadDoesOverride(t *testing.T) {
@@ -122,7 +124,7 @@ func TestOverloadDoesOverride(t *testing.T) {
 	expectedValues := map[string]string{
 		"OPTION_A": "1",
 	}
-	loadEnvAndCompareValues(t, Overload, envFileName, expectedValues, presets)
+	loadEnvAndCompareValues(t, dotenv.Overload, envFileName, expectedValues, presets)
 }
 
 func TestLoadPlainEnv(t *testing.T) {
@@ -135,7 +137,7 @@ func TestLoadPlainEnv(t *testing.T) {
 		"OPTION_E": "5",
 	}
 
-	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, noopPresets)
+	loadEnvAndCompareValues(t, dotenv.Load, envFileName, expectedValues, noopPresets)
 }
 
 func TestLoadExportedEnv(t *testing.T) {
@@ -145,7 +147,7 @@ func TestLoadExportedEnv(t *testing.T) {
 		"OPTION_B": "\n",
 	}
 
-	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, noopPresets)
+	loadEnvAndCompareValues(t, dotenv.Load, envFileName, expectedValues, noopPresets)
 }
 
 func TestLoadEqualsEnv(t *testing.T) {
@@ -154,7 +156,7 @@ func TestLoadEqualsEnv(t *testing.T) {
 		"OPTION_A": "postgres://localhost:5432/database?sslmode=disable",
 	}
 
-	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, noopPresets)
+	loadEnvAndCompareValues(t, dotenv.Load, envFileName, expectedValues, noopPresets)
 }
 
 func TestLoadQuotedEnv(t *testing.T) {
@@ -170,7 +172,7 @@ func TestLoadQuotedEnv(t *testing.T) {
 		"OPTION_H": "\n",
 	}
 
-	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, noopPresets)
+	loadEnvAndCompareValues(t, dotenv.Load, envFileName, expectedValues, noopPresets)
 }
 func TestLoadBenchEnv(t *testing.T) {
 	envFileName := "fixtures/bench.env"
@@ -202,13 +204,13 @@ func TestLoadBenchEnv(t *testing.T) {
 		"Z": "\"",
 	}
 
-	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, noopPresets)
+	loadEnvAndCompareValues(t, dotenv.Load, envFileName, expectedValues, noopPresets)
 }
 
 func TestActualEnvVarsAreLeftAlone(t *testing.T) {
 	os.Clearenv()
 	os.Setenv("OPTION_A", "actualenv")
-	_ = Load("fixtures/plain.env")
+	_ = dotenv.Load("fixtures/plain.env")
 
 	if os.Getenv("OPTION_A") != "actualenv" {
 		t.Error("An ENV var set earlier was overwritten")
@@ -282,7 +284,7 @@ func TestParsing(t *testing.T) {
 	// it 'throws an error if line format is incorrect' do
 	// expect{env('lol$wut')}.to raise_error(Dotenv::FormatError)
 	badlyFormattedLine := "lol$wut"
-	_, _, err := ParseString(badlyFormattedLine)
+	_, _, err := dotenv.ParseString(badlyFormattedLine)
 	if err == nil {
 		t.Errorf("Expected \"%v\" to return error, but it didn't", badlyFormattedLine)
 	}
@@ -291,33 +293,33 @@ func TestParsing(t *testing.T) {
 func TestLinesToIgnore(t *testing.T) {
 	// it 'ignores empty lines' do
 	// expect(env("\n \t  \nfoo=bar\n \nfizz=buzz")).to eql('foo' => 'bar', 'fizz' => 'buzz')
-	if _, _, err := ParseString("\n"); err != ErrEmptyln {
+	if _, _, err := dotenv.ParseString("\n"); err != dotenv.ErrEmptyln {
 		t.Error("Line with nothing but line break wasn't ignored")
 	}
 
-	if _, _, err := ParseString("\t\t "); err != ErrEmptyln {
+	if _, _, err := dotenv.ParseString("\t\t "); err != dotenv.ErrEmptyln {
 		t.Error("Line full of whitespace wasn't ignored")
 	}
 
 	// it 'ignores comment lines' do
 	// expect(env("\n\n\n # HERE GOES FOO \nfoo=bar")).to eql('foo' => 'bar')
-	if _, _, err := ParseString("# comment"); err != ErrCommentln {
+	if _, _, err := dotenv.ParseString("# comment"); err != dotenv.ErrCommentln {
 		t.Error("Comment wasn't ignored")
 	}
 
-	if _, _, err := ParseString("\t#comment"); err != ErrCommentln {
+	if _, _, err := dotenv.ParseString("\t#comment"); err != dotenv.ErrCommentln {
 		t.Error("Indented comment wasn't ignored")
 	}
 
 	// make sure we're not getting false positives
-	if _, _, err := ParseString(`OPTION_B='\n'`); err != nil {
+	if _, _, err := dotenv.ParseString(`OPTION_B='\n'`); err != nil {
 		t.Error("ignoring a perfectly valid line to parse")
 	}
 }
 
 func TestErrorReadDirectory(t *testing.T) {
 	envFileName := "fixtures/"
-	envMap, err := readFile(envFileName)
+	envMap, err := dotenv.ReadFile(envFileName)
 
 	if err == nil {
 		t.Errorf("Expected error, got %v", envMap)
@@ -326,7 +328,7 @@ func TestErrorReadDirectory(t *testing.T) {
 
 func TestErrorParsing(t *testing.T) {
 	envFileName := "fixtures/invalid1.env"
-	envMap, err := readFile(envFileName)
+	envMap, err := dotenv.ReadFile(envFileName)
 	if err == nil {
 		t.Errorf("Expected error, got %v", envMap)
 	}
@@ -338,7 +340,7 @@ func BenchmarkDotenv(b *testing.B) {
 	defer f.Close()
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		Read(f)
+		dotenv.Read(f)
 	}
 	b.StopTimer()
 }
