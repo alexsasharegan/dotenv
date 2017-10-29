@@ -20,24 +20,30 @@ const (
 var errEmptyln = errors.New("empty line")
 var errCommentln = errors.New("comment line")
 
-// Read an env file at a given path, and return values as a map.
-func Read(path string) (map[string]string, error) {
+// ReadFile reads an env file at a given path, and return values as a map.
+func ReadFile(path string) (map[string]string, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("could not open file: %v", err)
 	}
 	defer f.Close()
+	return Read(f)
+}
 
-	r := bufio.NewReader(f)
+// Read parses the given reader's contents and return values as a map.
+func Read(rd io.Reader) (map[string]string, error) {
+	r := bufio.NewReader(rd)
 	envMap := make(map[string]string)
-	// var line, k, v string
-	var line string
+	var (
+		line, k, v string
+		err        error
+	)
 	for {
 		line, err = r.ReadString('\n')
 		if err != nil {
 			break
 		}
-		k, v, err := parseln(line)
+		k, v, err = parseln(line, envMap)
 		if err != nil {
 			continue
 		}
@@ -72,17 +78,21 @@ func parseln(ln string) (key, value string, err error) {
 			}
 			if !insideQuotes {
 				quoteType = r
+				insideQuotes = true
 				continue
 			}
 		}
-		if r == hash {
-			break
+		if !insideQuotes {
+			if r == hash {
+				break
+			}
+			if r == eq {
+				key = buf.String()
+				buf.Reset()
+				continue
+			}
 		}
-		if r == eq {
-			key = buf.String()
-			buf.Reset()
-			continue
-		}
+
 		buf.WriteRune(r)
 	}
 	value = buf.String()
