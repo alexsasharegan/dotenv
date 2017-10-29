@@ -17,14 +17,12 @@ const (
 	posVal
 )
 
-// ErrInvalidln indicates an invalid line
-var ErrInvalidln = errors.New("invalid line")
-
-// ErrEmptyln indicates an empty line
-var ErrEmptyln = errors.New("empty line")
-
-// ErrCommentln indicates a comment line
-var ErrCommentln = errors.New("comment line")
+// Errors occurred during parsing.
+var (
+	ErrInvalidln = errors.New("invalid line")
+	ErrEmptyln   = errors.New("empty line")
+	ErrCommentln = errors.New("comment line")
+)
 
 var varRE = regexp.MustCompile(`\${\w+}`)
 
