@@ -9,6 +9,12 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"unicode"
+)
+
+const (
+	posKey int = iota
+	posVal
 )
 
 // ErrInvalidln indicates an invalid line
@@ -20,13 +26,14 @@ var ErrEmptyln = errors.New("empty line")
 // ErrCommentln indicates a comment line
 var ErrCommentln = errors.New("comment line")
 
-var varRE = regexp.MustCompile("\\${\\w+}")
+var varRE = regexp.MustCompile(`\${\w+}`)
+var escRE = regexp.MustCompile(`\\.`)
 
 // ReadFile reads an env file at a given path, and return values as a map.
 func ReadFile(path string) (map[string]string, error) {
 	f, err := os.Open(path)
 	if err != nil {
-		return nil, fmt.Errorf("could not open file: %v", err)
+		return nil, err
 	}
 	defer f.Close()
 	return Read(f)
@@ -51,6 +58,9 @@ func Read(rd io.Reader) (map[string]string, error) {
 			})
 		}
 		k, v, err = parseln(line)
+		if err == ErrInvalidln {
+			return nil, fmt.Errorf("could not parse file: %v", err)
+		}
 		if err != nil {
 			continue
 		}
@@ -67,11 +77,11 @@ func Read(rd io.Reader) (map[string]string, error) {
 func parseln(ln string) (key, value string, err error) {
 	ln = strings.TrimSpace(ln)
 	if strings.HasPrefix(ln, "#") {
-		err = ErrEmptyln
+		err = ErrCommentln
 		return
 	}
 	if ln == "" {
-		err = ErrCommentln
+		err = ErrEmptyln
 		return
 	}
 	if !strings.Contains(ln, "=") {
@@ -80,41 +90,107 @@ func parseln(ln string) (key, value string, err error) {
 	}
 
 	var (
-		buf                   bytes.Buffer
-		quoteType             rune
-		eqFound, insideQuotes bool
+		buf            bytes.Buffer
+		quoteType      rune
+		hasEq, inQuo   bool
+		mapPos, escPos int = posKey, -1
 	)
 
-	for _, r := range ln {
-		if r == '\'' || r == '"' {
-			if insideQuotes && r == quoteType {
-				insideQuotes = false
+	for i, r := range ln {
+		if inQuo {
+			if i == escPos {
+				switch r {
+				case 'n':
+					buf.WriteString("\n")
+				case 'r':
+					buf.WriteString("\r")
+				default:
+					buf.WriteRune(r)
+				}
 				continue
 			}
-			if !insideQuotes {
-				quoteType = r
-				insideQuotes = true
+			// Mark escapes
+			if r == '\\' {
+				escPos = i + 1
 				continue
 			}
 		}
-		if !insideQuotes {
+		// Check for quote delimiters
+		if r == '\'' || r == '"' {
+			// Look for closing delimiter
+			if inQuo && r == quoteType {
+				inQuo = false
+				// Don't parse beyond a value's terminating quote
+				if mapPos == posVal {
+					break
+				}
+				continue
+			}
+			// Mark quote as delimiter if at start of key/val
+			if !inQuo && buf.Len() == 0 {
+				quoteType = r
+				inQuo = true
+				continue
+			}
+		}
+		// If we're inside quotes and not being escaped,
+		// ignore certain tokens.
+		if !inQuo {
+			if unicode.IsSpace(r) {
+				continue
+			}
 			if r == '#' {
 				break
 			}
-			if r == '=' {
+			if mapPos == posKey && r == '=' {
 				key = buf.String()
 				buf.Reset()
-				eqFound = true
+				hasEq = true
+				mapPos++
 				continue
 			}
 		}
 		buf.WriteRune(r)
 	}
-	if !eqFound {
+	if !hasEq {
 		err = ErrInvalidln
 		return
 	}
 	value = buf.String()
+	// Watch out for a values that include a quote
+	if inQuo {
+		value = string(quoteType) + value
+	}
+	return
+}
+
+// Load a variadic number of environment config files.
+// Will not overwrite currently set env vars.
+func Load(paths ...string) (err error) {
+	if len(paths) == 0 {
+		paths = append(paths, ".env")
+	}
+	for _, path := range paths {
+		err = LoadFile(path, false)
+		if err != nil {
+			return
+		}
+	}
+	return
+}
+
+// Overload loads a variadic number of environment config files.
+// Overwrites currently set env vars.
+func Overload(paths ...string) (err error) {
+	if len(paths) == 0 {
+		paths = append(paths, ".env")
+	}
+	for _, path := range paths {
+		err = LoadFile(path, true)
+		if err != nil {
+			return
+		}
+	}
 	return
 }
 
