@@ -172,6 +172,38 @@ func TestLoadQuotedEnv(t *testing.T) {
 
 	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, noopPresets)
 }
+func TestLoadBenchEnv(t *testing.T) {
+	envFileName := "fixtures/bench.env"
+	expectedValues := map[string]string{
+		"A": "1",
+		"B": "2",
+		"C": "3",
+		"D": "4",
+		"E": "5",
+		"F": "SOMETHING",
+		"G": "something 'else'",
+		"H": "SOMETHING else #2",
+		"I": "something escaped\"",
+		"J": "asdfa",
+		"K": "http",
+		"L": "http://",
+		"M": "http://github.com",
+		"N": "http://github.com/alexsasharegan",
+		"O": "http://github.com/alexsasharegan/dotenv",
+		"P": "124215",
+		"Q": "127.0.0.1",
+		"R": ";aklsdgj",
+		"S": "adsg;hkjl",
+		"T": "k;lajdsg",
+		"U": "\n",
+		"V": "\n",
+		"X": "\r",
+		"Y": "\r\n",
+		"Z": "\"",
+	}
+
+	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, noopPresets)
+}
 
 func TestActualEnvVarsAreLeftAlone(t *testing.T) {
 	os.Clearenv()
@@ -298,4 +330,15 @@ func TestErrorParsing(t *testing.T) {
 	if err == nil {
 		t.Errorf("Expected error, got %v", envMap)
 	}
+}
+
+func BenchmarkDotenv(b *testing.B) {
+	b.StopTimer()
+	f, _ := os.Open("fixtures/bench.env")
+	defer f.Close()
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		Read(f)
+	}
+	b.StopTimer()
 }
