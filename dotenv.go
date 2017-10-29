@@ -27,7 +27,6 @@ var ErrEmptyln = errors.New("empty line")
 var ErrCommentln = errors.New("comment line")
 
 var varRE = regexp.MustCompile(`\${\w+}`)
-var escRE = regexp.MustCompile(`\\.`)
 
 // ReadFile reads an env file at a given path, and return values as a map.
 func ReadFile(path string) (map[string]string, error) {
