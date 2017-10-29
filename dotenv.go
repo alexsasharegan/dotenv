@@ -102,3 +102,27 @@ func parseln(ln string) (key, value string, err error) {
 	value = buf.String()
 	return
 }
+
+// LoadFile parses the environment config at the given path
+// and loads it into the os environment.
+func LoadFile(path string, overload bool) error {
+	env, err := ReadFile(path)
+	if err != nil {
+		return err
+	}
+	loadMap(env, overload)
+	return nil
+}
+
+func loadMap(envMap map[string]string, overload bool) {
+	currentEnv := make(map[string]bool)
+	for _, rawEnvLine := range os.Environ() {
+		currentEnv[strings.Split(rawEnvLine, "=")[0]] = true
+	}
+
+	for key, value := range envMap {
+		if !currentEnv[key] || overload {
+			os.Setenv(key, value)
+		}
+	}
+}
