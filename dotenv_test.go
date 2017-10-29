@@ -54,7 +54,7 @@ func TestOverloadWithNoArgsOverloadsDotEnv(t *testing.T) {
 }
 
 func TestLoadFileNotFound(t *testing.T) {
-	err := LoadFile("somefilethatwillneverexistever.env", false)
+	err := Load("somefilethatwillneverexistever.env")
 	if err == nil {
 		t.Error("File wasn't found but Load didn't return an error")
 	}

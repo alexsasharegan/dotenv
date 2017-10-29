@@ -162,7 +162,7 @@ func Load(paths ...string) (err error) {
 		paths = append(paths, ".env")
 	}
 	for _, path := range paths {
-		err = LoadFile(path, false)
+		err = loadFile(path, false)
 		if err != nil {
 			return
 		}
@@ -177,7 +177,7 @@ func Overload(paths ...string) (err error) {
 		paths = append(paths, ".env")
 	}
 	for _, path := range paths {
-		err = LoadFile(path, true)
+		err = loadFile(path, true)
 		if err != nil {
 			return
 		}
@@ -185,9 +185,9 @@ func Overload(paths ...string) (err error) {
 	return
 }
 
-// LoadFile parses the environment config at the given path
+// loadFile parses the environment config at the given path
 // and loads it into the os environment.
-func LoadFile(path string, overload bool) error {
+func loadFile(path string, overload bool) error {
 	env, err := readFile(path)
 	if err != nil {
 		return err
