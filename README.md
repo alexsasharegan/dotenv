@@ -1,6 +1,7 @@
 # dotenv
 
 ![build status](https://travis-ci.org/alexsasharegan/dotenv.svg?branch=master)
+![godocs](https://godoc.org/github.com/alexsasharegan/dotenv?status.svg)
 
 A Go (golang) implementation of dotenv _(inspired by: [https://github.com/joho/godotenv](https://github.com/joho/godotenv))_.
 
