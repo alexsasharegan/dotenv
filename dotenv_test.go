@@ -8,7 +8,7 @@ import (
 var noopPresets = make(map[string]string)
 
 func parseAndCompare(t *testing.T, rawEnvLine string, expectedKey string, expectedValue string) {
-	key, value, _ := parseln(rawEnvLine)
+	key, value, _ := ParseString(rawEnvLine)
 	if key != expectedKey || value != expectedValue {
 		t.Errorf("Expected '%v' to parse as '%v' => '%v', got '%v' => '%v' instead", rawEnvLine, expectedKey, expectedValue, key, value)
 	}
@@ -282,7 +282,7 @@ func TestParsing(t *testing.T) {
 	// it 'throws an error if line format is incorrect' do
 	// expect{env('lol$wut')}.to raise_error(Dotenv::FormatError)
 	badlyFormattedLine := "lol$wut"
-	_, _, err := parseln(badlyFormattedLine)
+	_, _, err := ParseString(badlyFormattedLine)
 	if err == nil {
 		t.Errorf("Expected \"%v\" to return error, but it didn't", badlyFormattedLine)
 	}
@@ -291,26 +291,26 @@ func TestParsing(t *testing.T) {
 func TestLinesToIgnore(t *testing.T) {
 	// it 'ignores empty lines' do
 	// expect(env("\n \t  \nfoo=bar\n \nfizz=buzz")).to eql('foo' => 'bar', 'fizz' => 'buzz')
-	if _, _, err := parseln("\n"); err != ErrEmptyln {
+	if _, _, err := ParseString("\n"); err != ErrEmptyln {
 		t.Error("Line with nothing but line break wasn't ignored")
 	}
 
-	if _, _, err := parseln("\t\t "); err != ErrEmptyln {
+	if _, _, err := ParseString("\t\t "); err != ErrEmptyln {
 		t.Error("Line full of whitespace wasn't ignored")
 	}
 
 	// it 'ignores comment lines' do
 	// expect(env("\n\n\n # HERE GOES FOO \nfoo=bar")).to eql('foo' => 'bar')
-	if _, _, err := parseln("# comment"); err != ErrCommentln {
+	if _, _, err := ParseString("# comment"); err != ErrCommentln {
 		t.Error("Comment wasn't ignored")
 	}
 
-	if _, _, err := parseln("\t#comment"); err != ErrCommentln {
+	if _, _, err := ParseString("\t#comment"); err != ErrCommentln {
 		t.Error("Indented comment wasn't ignored")
 	}
 
 	// make sure we're not getting false positives
-	if _, _, err := parseln(`OPTION_B='\n'`); err != nil {
+	if _, _, err := ParseString(`OPTION_B='\n'`); err != nil {
 		t.Error("ignoring a perfectly valid line to parse")
 	}
 }

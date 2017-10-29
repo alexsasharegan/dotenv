@@ -1,3 +1,7 @@
+/*
+Package dotenv is an implementation of the Ruby dotenv library.
+The purpose of the library is to load variables from a file into the environment.
+*/
 package dotenv
 
 import (
@@ -51,7 +55,7 @@ func Read(rd io.Reader) (map[string]string, error) {
 				return envMap[strings.Trim(s, "${}")]
 			})
 		}
-		k, v, err = parseln(line)
+		k, v, err = ParseString(line)
 		if err == ErrInvalidln {
 			return nil, fmt.Errorf("could not parse file: %v", err)
 		}
@@ -65,7 +69,9 @@ func Read(rd io.Reader) (map[string]string, error) {
 	return envMap, nil
 }
 
-func parseln(ln string) (key, value string, err error) {
+// ParseString parses a given string into a key, value pair.
+// Returns the key, value, and an error.
+func ParseString(ln string) (key, value string, err error) {
 	ln = strings.TrimSpace(ln)
 	if strings.HasPrefix(ln, "#") {
 		err = ErrCommentln
@@ -155,7 +161,7 @@ func parseln(ln string) (key, value string, err error) {
 	return
 }
 
-// Load a variadic number of environment config files.
+// Load will load a variadic number of environment config files.
 // Will not overwrite currently set env vars.
 func Load(paths ...string) (err error) {
 	if len(paths) == 0 {
@@ -170,7 +176,7 @@ func Load(paths ...string) (err error) {
 	return
 }
 
-// Overload loads a variadic number of environment config files.
+// Overload will load a variadic number of environment config files.
 // Overwrites currently set env vars.
 func Overload(paths ...string) (err error) {
 	if len(paths) == 0 {
