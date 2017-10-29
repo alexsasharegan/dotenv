@@ -33,10 +33,11 @@ LIB=${GIT_PROVIDER}/alexsasharegan/dotenv # variable interpolation (plus ignored
 package main
 
 import (
-    "github.com/alexsasharegan/dotenv"
     "fmt"
     "log"
     "os"
+
+    "github.com/alexsasharegan/dotenv"
 )
 
 func main() {
