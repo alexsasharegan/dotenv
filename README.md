@@ -17,7 +17,7 @@ go get github.com/alexsasharegan/dotenv
 
 In your environment file (canonically named `.env`):
 
-```environ
+```sh
 S3_BUCKET=YOURS3BUCKET
 SECRET_KEY=YOURSECRETKEYGOESHERE
 
@@ -28,6 +28,8 @@ ESCAPED='You can escape you\'re strings too.'
 GIT_PROVIDER=github.com
 LIB=${GIT_PROVIDER}/alexsasharegan/dotenv # variable interpolation (plus ignored trailing comment)
 ```
+
+In your application:
 
 ```go
 package main
