@@ -28,7 +28,7 @@ var (
 	ErrCommentln = errors.New("comment line")
 )
 
-var varRE = regexp.MustCompile(`\${\w+}`)
+var regexVar = regexp.MustCompile(`\${\w+}`)
 
 // ReadFile reads an env file at a given path, and return values as a map.
 func ReadFile(path string) (map[string]string, error) {
@@ -50,8 +50,8 @@ func Read(rd io.Reader) (map[string]string, error) {
 	)
 	for scanner.Scan() {
 		line = scanner.Text()
-		if varRE.MatchString(line) {
-			line = varRE.ReplaceAllStringFunc(line, func(s string) string {
+		if regexVar.MatchString(line) {
+			line = regexVar.ReplaceAllStringFunc(line, func(s string) string {
 				return envMap[strings.Trim(s, "${}")]
 			})
 		}
@@ -136,12 +136,16 @@ func ParseString(s string) (key, value string, err error) {
 		// If we're inside quotes and not being escaped,
 		// ignore certain tokens.
 		if !inQuo {
+			// Whitespace is ignored outside quoted content
 			if unicode.IsSpace(r) {
 				continue
 			}
+			// Hash indicates a comment segment. Cease parsing.
 			if r == '#' {
 				break
 			}
+			// If we are parsing the key, '=' indicates the key is written to buffer.
+			// Save the key string, and inc pos to value parsing.
 			if mapPos == posKey && r == '=' {
 				key = buf.String()
 				buf.Reset()
@@ -152,12 +156,15 @@ func ParseString(s string) (key, value string, err error) {
 		}
 		buf.WriteRune(r)
 	}
+	// If we've never encountered a '=', the line is invalid. (probably quoted incorrectly)
 	if !hasEq {
 		err = ErrInvalidln
 		return
 	}
 	value = buf.String()
-	// Watch out for a values that include a quote
+	// While unlikely, an unquoted value may begin with a literal quote.
+	// This would trigger our escape sequence for the char, but never close the quo delimiter.
+	// Prepend the quote we marked to compensate for this.
 	if inQuo {
 		value = string(quoteType) + value
 	}
