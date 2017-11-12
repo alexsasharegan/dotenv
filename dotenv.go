@@ -212,6 +212,17 @@ func loadFile(path string, overload bool) error {
 	return nil
 }
 
+// LoadReader will load an environment config from a reader interface.
+// Will not overwrite currently set env vars.
+func LoadReader(r io.Reader) error {
+	env, err := Read(r)
+	if err != nil {
+		return err
+	}
+	loadMap(env, false)
+	return nil
+}
+
 func loadMap(envMap map[string]string, overload bool) {
 	currentEnv := make(map[string]bool)
 	for _, rawEnvLine := range os.Environ() {
