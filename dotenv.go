@@ -208,7 +208,7 @@ func loadFile(path string, overload bool) error {
 	if err != nil {
 		return err
 	}
-	loadMap(env, overload)
+	LoadMap(env, overload)
 	return nil
 }
 
@@ -219,11 +219,12 @@ func LoadReader(r io.Reader) error {
 	if err != nil {
 		return err
 	}
-	loadMap(env, false)
+	LoadMap(env, false)
 	return nil
 }
 
-func loadMap(envMap map[string]string, overload bool) {
+// LoadMap loads a map into the os environment, optionally overwriting existing vars.
+func LoadMap(envMap map[string]string, overload bool) {
 	currentEnv := make(map[string]bool)
 	for _, rawEnvLine := range os.Environ() {
 		currentEnv[strings.Split(rawEnvLine, "=")[0]] = true
